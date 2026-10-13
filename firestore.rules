@@ -1,0 +1,58 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // 1. User Account Document: users/{uid}
+    // Stores verified account info (displayName, email, phoneNumber, photoURL, authProvider, createdAt, lastLoginAt)
+    match /users/{uid} {
+      allow read: if isOwner(uid);
+      allow create: if isOwner(uid) && request.resource.data.uid == uid;
+      allow update: if isOwner(uid) && request.resource.data.uid == uid;
+      allow delete: if false; // Deletion handled via account deactivation flow
+    }
+
+    // 2. Career Digital Twin Profile: profiles/{uid}
+    // Stores structured career profile (skills, education, experience, projects, target roles)
+    match /profiles/{uid} {
+      allow read: if isOwner(uid);
+      allow create, update: if isOwner(uid);
+      allow delete: if isOwner(uid);
+    }
+
+    // 3. Resumes & Versions: resumes/{resumeId}
+    // Every resume metadata/version document must be scoped by the authenticated user's UID
+    match /resumes/{resumeId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // 4. Job Applications: applications/{appId}
+    match /applications/{appId} {
+      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid && request.resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    // 5. User Preferences: preferences/{uid}
+    match /preferences/{uid} {
+      allow read, write: if isOwner(uid);
+    }
+
+    // Explicit Default Deny for any other collection or cross-tenant query
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
