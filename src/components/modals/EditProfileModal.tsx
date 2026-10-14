@@ -14,9 +14,9 @@ import {
 } from 'lucide-react';
 
 export const EditProfileModal: React.FC = () => {
-  const { isEditProfileOpen, closeEditProfile, profile, updateProfile } = useApp();
+  const { isEditProfileOpen, closeEditProfile, profile, updateProfile, isDemoMode } = useApp();
 
-  const [activeTab, setActiveTab] = useState<'personal' | 'experience' | 'education' | 'skills' | 'projects' | 'certifications' | 'targets'>('personal');
+  const [activeTab, setActiveTab] = useState<'personal' | 'skills' | 'experience' | 'education' | 'projects' | 'certifications' | 'targets'>('personal');
 
   // Form states initialized from active profile
   const [name, setName] = useState(profile.name);
@@ -188,6 +188,28 @@ export const EditProfileModal: React.FC = () => {
       }
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        {/* Demo Mode Notice Banner */}
+        {isDemoMode && (
+          <div
+            style={{
+              padding: '0.65rem 0.85rem',
+              borderRadius: 'var(--radius-md)',
+              background: 'rgba(245, 158, 11, 0.08)',
+              border: '1px solid rgba(245, 158, 11, 0.3)',
+              color: '#92400e',
+              fontSize: '0.78rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <Sparkles size={15} style={{ flexShrink: 0 }} />
+            <span>
+              <strong>Demo Sandbox:</strong> Editing sample candidate <strong>Alex Rivera</strong>. Saving updates the active session in memory. Persistent Firestore storage requires signing in with Google.
+            </span>
+          </div>
+        )}
+
         {/* Navigation Tabs */}
         <div style={{ display: 'flex', gap: '0.35rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem', overflowX: 'auto' }}>
           {[

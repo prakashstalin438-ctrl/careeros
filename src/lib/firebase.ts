@@ -8,26 +8,51 @@ export interface FirebaseConfigStatus {
   projectId?: string;
 }
 
-const getEnvVar = (key: string): string => {
-  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
-    return import.meta.env[key];
-  }
-  const proc = (globalThis as any).process;
-  if (proc && proc.env && proc.env[key]) {
-    return proc.env[key] as string;
+const sanitize = (val: unknown): string => {
+  if (typeof val === 'string') {
+    return val.trim();
   }
   return '';
 };
 
+// Static import.meta.env accesses allow Vite to inline variables during build
 const firebaseEnvConfig = {
-  apiKey: getEnvVar('VITE_FIREBASE_API_KEY'),
-  authDomain: getEnvVar('VITE_FIREBASE_AUTH_DOMAIN'),
-  projectId: getEnvVar('VITE_FIREBASE_PROJECT_ID'),
-  storageBucket: getEnvVar('VITE_FIREBASE_STORAGE_BUCKET'),
-  messagingSenderId: getEnvVar('VITE_FIREBASE_MESSAGING_SENDER_ID'),
-  appId: getEnvVar('VITE_FIREBASE_APP_ID'),
-  measurementId: getEnvVar('VITE_FIREBASE_MEASUREMENT_ID'),
+  apiKey:
+    sanitize(import.meta.env.VITE_FIREBASE_API_KEY) ||
+    sanitize((globalThis as any).process?.env?.VITE_FIREBASE_API_KEY),
+  authDomain:
+    sanitize(import.meta.env.VITE_FIREBASE_AUTH_DOMAIN) ||
+    sanitize((globalThis as any).process?.env?.VITE_FIREBASE_AUTH_DOMAIN),
+  projectId:
+    sanitize(import.meta.env.VITE_FIREBASE_PROJECT_ID) ||
+    sanitize((globalThis as any).process?.env?.VITE_FIREBASE_PROJECT_ID),
+  storageBucket:
+    sanitize(import.meta.env.VITE_FIREBASE_STORAGE_BUCKET) ||
+    sanitize((globalThis as any).process?.env?.VITE_FIREBASE_STORAGE_BUCKET),
+  messagingSenderId:
+    sanitize(import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID) ||
+    sanitize((globalThis as any).process?.env?.VITE_FIREBASE_MESSAGING_SENDER_ID),
+  appId:
+    sanitize(import.meta.env.VITE_FIREBASE_APP_ID) ||
+    sanitize((globalThis as any).process?.env?.VITE_FIREBASE_APP_ID),
+  measurementId:
+    sanitize(import.meta.env.VITE_FIREBASE_MEASUREMENT_ID) ||
+    sanitize((globalThis as any).process?.env?.VITE_FIREBASE_MEASUREMENT_ID),
 };
+
+// Safe diagnostic logging: logs ONLY project ID, origin, and boolean presence of API key (NEVER prints key value)
+if (typeof window !== 'undefined') {
+  const diagnostic = {
+    projectId: firebaseEnvConfig.projectId || '(none)',
+    hasApiKey: Boolean(firebaseEnvConfig.apiKey),
+    apiKeyLength: firebaseEnvConfig.apiKey.length,
+    authDomain: firebaseEnvConfig.authDomain || '(none)',
+    isConfigured: Boolean(firebaseEnvConfig.apiKey && firebaseEnvConfig.projectId),
+    currentOrigin: window.location.origin,
+  };
+  (window as any).__CAREEROS_FIREBASE_DIAGNOSTIC__ = diagnostic;
+  console.info('[CareerOS Firebase Diagnostic]', diagnostic);
+}
 
 export const getMissingFirebaseKeys = (): string[] => {
   const missing: string[] = [];

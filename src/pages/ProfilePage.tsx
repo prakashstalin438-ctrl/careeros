@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 export const ProfilePage: React.FC = () => {
-  const { profile, openEditProfile, setActiveTab, isAuthenticated } = useApp();
+  const { profile, openEditProfile, setActiveTab, isAuthenticated, isDemoMode } = useApp();
 
   return (
     <StateView
@@ -33,7 +33,7 @@ export const ProfilePage: React.FC = () => {
         {/* Page Header */}
         <div className="page-header">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ai-primary)' }}>
                 Career Digital Twin • Ground Truth Profile
               </span>
@@ -43,7 +43,9 @@ export const ProfilePage: React.FC = () => {
             </div>
             <h1 className="page-title">My Career Profile</h1>
             <p className="page-subtitle">
-              Your truthful career representation. All skills, work history, projects, and goals are strictly grounded in user-supplied or parsed resume documents.
+              {isDemoMode
+                ? 'Sample career representation for Alex Rivera. Work history, verified skills, and target roles are simulated.'
+                : 'Your truthful career representation. All skills, work history, projects, and goals are strictly grounded in user-supplied or parsed resume documents.'}
             </p>
           </div>
           <div className="page-actions">

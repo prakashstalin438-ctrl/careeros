@@ -15,7 +15,7 @@ import {
 import { ApplicationStatus, ApplicationItem } from '../types';
 
 export const ApplicationsPage: React.FC = () => {
-  const { applications, setActiveTab, operatingMode } = useApp();
+  const { applications, setActiveTab, operatingMode, isDemoMode } = useApp();
   const [selectedStatus, setSelectedStatus] = useState<string>('All');
   const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
 
@@ -74,7 +74,7 @@ export const ApplicationsPage: React.FC = () => {
         {/* Page Header */}
         <div className="page-header">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ai-primary)' }}>
                 Application Lifecycle Engine
               </span>
@@ -82,7 +82,9 @@ export const ApplicationsPage: React.FC = () => {
             </div>
             <h1 className="page-title">Application Pipeline</h1>
             <p className="page-subtitle">
-              Track your active job applications, interview stages, follow-ups, and resume versions.
+              {isDemoMode
+                ? 'Sample tracking board for candidate Alex Rivera showing interview loops, assessments, and offer stages.'
+                : 'Track your active job applications, interview stages, follow-ups, and resume versions.'}
             </p>
           </div>
           <div className="page-actions">

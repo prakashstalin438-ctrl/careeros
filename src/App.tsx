@@ -15,10 +15,10 @@ import { SettingsPage } from './pages/SettingsPage';
 import { Sparkles } from 'lucide-react';
 
 const AppContent: React.FC = () => {
-  const { activeTab, authStatus } = useApp();
+  const { activeTab, authStatus, isDemoMode } = useApp();
 
-  // Route Gate: Loading Splash
-  if (authStatus === 'loading') {
+  // Route Gate: Loading Splash (skip if in Demo Mode)
+  if (authStatus === 'loading' && !isDemoMode) {
     return (
       <div
         style={{
@@ -58,12 +58,12 @@ const AppContent: React.FC = () => {
     );
   }
 
-  // Route Gate: Unauthenticated User -> Login / Register Screen
-  if (authStatus === 'unauthenticated') {
+  // Route Gate: Unauthenticated User -> Login / Register Screen (unless in Demo Mode)
+  if (authStatus === 'unauthenticated' && !isDemoMode) {
     return <AuthModal isOpen={true} isFullPage={true} onClose={() => {}} />;
   }
 
-  // Authenticated User -> CareerOS Workspace
+  // Authenticated User OR Demo Explorer -> CareerOS Workspace
   const renderActivePage = () => {
     switch (activeTab) {
       case 'dashboard':

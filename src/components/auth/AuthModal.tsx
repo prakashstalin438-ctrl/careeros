@@ -11,6 +11,8 @@ import {
   CheckCircle2,
   ShieldCheck,
   Key,
+  ArrowRight,
+  PlayCircle,
 } from 'lucide-react';
 
 interface AuthModalProps {
@@ -36,7 +38,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   initialMode = 'login',
   isFullPage = false,
 }) => {
-  const { loginWithGoogle, sendPhoneOTP, verifyPhoneOTP, addToast } = useApp();
+  const { loginWithGoogle, sendPhoneOTP, verifyPhoneOTP, addToast, enterDemoMode } = useApp();
 
   const [mode, setMode] = useState<'login' | 'signup'>(initialMode);
 
@@ -170,6 +172,100 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
       </div>
 
+      {/* Prominent Explore Demo Section (Requirement 2 & 8) */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(168, 85, 247, 0.08) 100%)',
+          border: '1.5px solid rgba(129, 140, 248, 0.4)',
+          borderRadius: 'var(--radius-lg)',
+          padding: '1.15rem',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '0.75rem',
+          boxShadow: '0 4px 16px rgba(99, 102, 241, 0.1)',
+        }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
+            <span
+              style={{
+                width: '26px',
+                height: '26px',
+                borderRadius: 'var(--radius-sm)',
+                background: 'var(--ai-gradient)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+                boxShadow: '0 2px 6px rgba(99, 102, 241, 0.3)',
+              }}
+            >
+              <Sparkles size={14} />
+            </span>
+            <span style={{ fontWeight: 700, fontSize: '0.88rem', color: 'var(--text-main)' }}>
+              Recruiter & Portfolio Sandbox
+            </span>
+          </div>
+          <span
+            style={{
+              background: 'rgba(16, 185, 129, 0.12)',
+              border: '1px solid rgba(16, 185, 129, 0.3)',
+              color: '#065f46',
+              fontSize: '0.68rem',
+              fontWeight: 700,
+              padding: '0.15rem 0.5rem',
+              borderRadius: 'var(--radius-full)',
+              letterSpacing: '0.03em',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            No login required
+          </span>
+        </div>
+
+        <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.45, margin: 0 }}>
+          Explore CareerOS intelligence with sample candidate <strong>Alex Rivera</strong> (Lead Gen AI Engineer). Browse matched jobs, applications, and skill plans without creating an account.
+        </p>
+
+        <button
+          type="button"
+          onClick={() => {
+            enterDemoMode();
+            onClose();
+          }}
+          className="btn"
+          style={{
+            width: '100%',
+            padding: '0.72rem 1rem',
+            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #c026d3 100%)',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: 'var(--radius-md)',
+            fontWeight: 700,
+            fontSize: '0.92rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '0.5rem',
+            cursor: 'pointer',
+            boxShadow: '0 4px 14px rgba(79, 70, 229, 0.35)',
+            transition: 'all var(--transition-fast)',
+          }}
+          onMouseEnter={(e) => {
+            (e.currentTarget as HTMLElement).style.transform = 'translateY(-1px)';
+            (e.currentTarget as HTMLElement).style.boxShadow = '0 6px 20px rgba(79, 70, 229, 0.45)';
+          }}
+          onMouseLeave={(e) => {
+            (e.currentTarget as HTMLElement).style.transform = 'none';
+            (e.currentTarget as HTMLElement).style.boxShadow = '0 4px 14px rgba(79, 70, 229, 0.35)';
+          }}
+        >
+          <PlayCircle size={18} />
+          <span>Explore Demo</span>
+          <ArrowRight size={15} style={{ marginLeft: 'auto' }} />
+        </button>
+      </div>
+
       {/* Missing Firebase Config Notice */}
       {!firebaseStatus.isConfigured && (
         <div
@@ -184,13 +280,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontWeight: 700, marginBottom: '0.25rem' }}>
-            <Key size={14} /> Firebase Configuration Required
+            <Key size={14} /> Firebase Setup Optional for Demo
           </div>
           <div>
-            Please supply your Firebase credentials in <code>.env</code> (see <code>.env.example</code>).
+            Firebase credentials are not detected in <code>.env</code>. You can click <strong>Explore Demo</strong> above to test all platform features without any configuration.
           </div>
           <div style={{ marginTop: '0.35rem', fontSize: '0.74rem', color: '#92400e' }}>
-            Missing keys: <strong>{firebaseStatus.missingKeys.join(', ')}</strong>
+            Missing keys for live auth: <strong>{firebaseStatus.missingKeys.join(', ')}</strong>
           </div>
         </div>
       )}
@@ -200,7 +296,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         <div
           style={{
             display: 'flex',
-            alignItems: 'flex-start',
+            flexDirection: 'column',
             gap: '0.5rem',
             padding: '0.75rem 0.9rem',
             background: 'var(--color-error-bg)',
@@ -211,10 +307,51 @@ export const AuthModal: React.FC<AuthModalProps> = ({
             lineHeight: 1.45,
           }}
         >
-          <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-          <span>{error}</span>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+            <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
+            <span>{error}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              enterDemoMode();
+              onClose();
+            }}
+            style={{
+              alignSelf: 'flex-start',
+              background: 'none',
+              border: 'none',
+              color: 'var(--ai-primary)',
+              fontWeight: 700,
+              fontSize: '0.78rem',
+              cursor: 'pointer',
+              textDecoration: 'underline',
+              padding: 0,
+            }}
+          >
+            Explore in Demo Mode instead (No login required) →
+          </button>
         </div>
       )}
+
+      {/* Divider */}
+      <div style={{ position: 'relative', textAlign: 'center', margin: '0.15rem 0' }}>
+        <div style={{ position: 'absolute', top: '50%', left: 0, right: 0, height: '1px', background: 'var(--border-subtle)' }} />
+        <span
+          style={{
+            position: 'relative',
+            background: isFullPage ? 'var(--bg-surface)' : '#ffffff',
+            padding: '0 0.85rem',
+            fontSize: '0.72rem',
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.06em',
+            fontWeight: 700,
+          }}
+        >
+          or sign in with credentials
+        </span>
+      </div>
 
       {/* 1. Continue with Google Button */}
       <button

@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   Bot,
   Zap,
+  Home,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -25,7 +26,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) => {
-  const { activeTab, setActiveTab, profile, operatingMode, isAuthenticated, applications, activeResumeVersion } = useApp();
+  const { activeTab, setActiveTab, profile, operatingMode, isAuthenticated, isDemoMode, applications, activeResumeVersion } = useApp();
   const [collapsed, setCollapsed] = useState<boolean>(false);
 
   const navItems = [
@@ -125,21 +126,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
             <Sparkles size={20} />
           </div>
           {!collapsed && (
-            <div className="brand-text">
-              <span className="brand-name">
-                CareerOS{' '}
-                <span
-                  className="brand-badge"
-                  style={{
-                    background: isAuthenticated ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
-                    color: isAuthenticated ? '#34d399' : '#fbbf24',
-                  }}
-                >
-                  {isAuthenticated ? 'Active User' : 'Demo Data'}
-                </span>
-              </span>
-              <span className="brand-sub">
-                {isAuthenticated ? 'Production Intelligence' : 'Sample Career Dataset'}
+            <div className="brand-text" style={{ gap: '0.15rem', justifyContent: 'center' }}>
+              <span className="brand-name" style={{ lineHeight: 1.2 }}>CareerOS</span>
+              <span className="brand-sub" style={{ lineHeight: 1.2 }}>
+                {isAuthenticated ? 'Production Intelligence' : 'Alex Rivera (Fictional)'}
               </span>
             </div>
           )}
@@ -155,6 +145,40 @@ export const Sidebar: React.FC<SidebarProps> = ({ mobileOpen, setMobileOpen }) =
       </div>
 
       <nav className="sidebar-nav">
+        {/* Back to Demo Home dedicated quick option */}
+        {isDemoMode && (
+          <div style={{ marginBottom: '0.65rem' }}>
+            <div
+              className={`nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+              onClick={() => handleNavClick('dashboard')}
+              style={{
+                background: activeTab === 'dashboard' ? 'var(--ai-gradient)' : 'rgba(99, 102, 241, 0.12)',
+                border: '1px solid rgba(129, 140, 248, 0.35)',
+                color: '#ffffff',
+                fontWeight: 600,
+                padding: '0.6rem 0.75rem',
+                gap: '0.65rem',
+              }}
+              title="Return to the Demo Dashboard"
+            >
+              <Home className="nav-icon" style={{ color: activeTab === 'dashboard' ? '#ffffff' : '#a5b4fc', flexShrink: 0 }} />
+              {!collapsed && (
+                <span
+                  className="nav-label"
+                  style={{
+                    fontSize: '0.84rem',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    overflow: 'visible',
+                    textOverflow: 'clip',
+                  }}
+                >
+                  Back to Demo Home
+                </span>
+              )}
+            </div>
+          </div>
+        )}
         {sections.map((section) => (
           <div key={section} style={{ display: 'flex', flexDirection: 'column' }}>
             {!collapsed && <div className="nav-section-title">{section}</div>}

@@ -22,6 +22,8 @@ export const SettingsPage: React.FC = () => {
     addToast,
     user,
     isAuthenticated,
+    isDemoMode,
+    showDemoNotice,
     openAuthModal,
     logout,
   } = useApp();
@@ -33,6 +35,16 @@ export const SettingsPage: React.FC = () => {
   const [aiCoachingTone, setAiCoachingTone] = useState('Senior Mentor (Rigorous)');
 
   const handleSaveSettings = () => {
+    if (isDemoMode) {
+      showDemoNotice(
+        'Simulated System Configuration Saved',
+        'Notification alerts and strictness parameters updated in local demo state. Real automated emails, SMS dispatches, and cloud settings synchronization are disabled in Demo Mode.',
+        'Save Configuration',
+        'settings'
+      );
+      return;
+    }
+
     addToast({
       type: 'success',
       title: 'Settings Saved',
@@ -342,13 +354,22 @@ export const SettingsPage: React.FC = () => {
                   </button>
                   <button
                     className="btn btn-secondary btn-sm"
-                    onClick={() =>
-                      addToast({
-                        type: 'warning',
-                        title: 'Data Reset Guard',
-                        message: 'Mock profile is read-only in Phase 1 demo.',
-                      })
-                    }
+                    onClick={() => {
+                      if (isDemoMode) {
+                        showDemoNotice(
+                          'Demo Candidate Data Preserved',
+                          'Demo candidate Alex Rivera is preserved for recruiter and portfolio exploration. To purge or reset your personal career data, sign in to your authenticated workspace.',
+                          'Purge Sandbox',
+                          'general'
+                        );
+                      } else {
+                        addToast({
+                          type: 'warning',
+                          title: 'Data Reset Guard',
+                          message: 'Account reset requires explicit confirmation.',
+                        });
+                      }
+                    }}
                     style={{ color: '#dc2626' }}
                   >
                     <Trash2 size={13} /> Purge Sandbox

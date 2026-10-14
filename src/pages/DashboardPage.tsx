@@ -25,6 +25,8 @@ export const DashboardPage: React.FC = () => {
     toggleSaveJob,
     skills,
     operatingMode,
+    isDemoMode,
+    openAuthModal,
   } = useApp();
 
   const highMatchJobs = jobs.filter((j) => j.matchScore >= 85);
@@ -39,20 +41,37 @@ export const DashboardPage: React.FC = () => {
       <div>
         {/* Page Top Header */}
         <div className="page-header">
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+          <div style={{ flex: '1 1 320px', minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ai-primary)' }}>
-                Career Operating System • Real-Time Synchronization
+                {isDemoMode ? 'Career Operating System • Portfolio Sandbox' : 'Career Operating System • Real-Time Synchronization'}
               </span>
-              <Badge variant="success">Authenticated Workspace</Badge>
             </div>
-            <h1 className="page-title">Career Intelligence Dashboard</h1>
-            <p className="page-subtitle">
-              Career Digital Twin is active for <strong>{profile.name || 'Candidate'}</strong>
-              {profile.targetRole ? ` targeting ${profile.targetRole}` : ''}.
+            <h1 className="page-title" style={{ margin: 0, padding: '0.1rem 0' }}>Career Intelligence Dashboard</h1>
+            <p className="page-subtitle" style={{ margin: '0.35rem 0 0 0' }}>
+              {isDemoMode ? (
+                <>
+                  Exploring sample candidate dataset for <strong>{profile.name}</strong> targeting{' '}
+                  <strong>{profile.targetRole || 'Lead Generative AI Engineer'}</strong>. Fictional data shown.
+                </>
+              ) : (
+                <>
+                  Career Digital Twin is active for <strong>{profile.name || 'Candidate'}</strong>
+                  {profile.targetRole ? ` targeting ${profile.targetRole}` : ''}.
+                </>
+              )}
             </p>
           </div>
           <div className="page-actions">
+            {isDemoMode && (
+              <button
+                className="btn btn-secondary btn-sm"
+                onClick={openAuthModal}
+                style={{ color: 'var(--ai-primary)', fontWeight: 600 }}
+              >
+                Sign In with Google
+              </button>
+            )}
             <button
               className="btn btn-secondary btn-sm"
               onClick={() => setActiveTab('preferences')}

@@ -8,6 +8,8 @@ import { ApplyModal } from '../modals/ApplyModal';
 import { EditProfileModal } from '../modals/EditProfileModal';
 import { ResumeReviewModal } from '../modals/ResumeReviewModal';
 import { AuthModal } from '../auth/AuthModal';
+import { DemoModeBanner } from '../common/DemoModeBanner';
+import { DemoNoticeModal } from '../modals/DemoNoticeModal';
 import { useApp } from '../../context/AppContext';
 
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -26,6 +28,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
     <div className="app-container">
       <Sidebar mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
       <div className="main-wrapper">
+        <DemoModeBanner />
         <Header onMobileMenuToggle={() => setMobileOpen(!mobileOpen)} />
         <main className="page-viewport">{children}</main>
       </div>
@@ -43,6 +46,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
         onApplyToProfile={applyReviewedDataToProfile}
       />
       <AuthModal isOpen={isAuthModalOpen} onClose={closeAuthModal} />
+      <DemoNoticeModal />
       <ToastContainer />
     </div>
   );

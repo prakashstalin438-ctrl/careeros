@@ -12,9 +12,14 @@ import {
   ResumeVersion,
   ParsedResumeData,
   AuthStatus,
+  DemoNoticeState,
 } from '../types';
 import { mockJobs } from '../data/mockJobs';
 import { mockPreferences } from '../data/mockPreferences';
+import { mockProfile, mockResumeVersions } from '../data/mockProfile';
+import { mockApplications } from '../data/mockApplications';
+import { mockSevenDayPlan } from '../data/mockLearning';
+import { mockSkills } from '../data/mockSkillCoach';
 import { authService } from '../services/authService';
 import {
   subscribeToUserProfile,
@@ -70,6 +75,19 @@ interface AppContextType {
   toggleAiPanel: () => void;
   viewState: ViewState;
   setViewState: (state: ViewState) => void;
+
+  // Demo Mode Controls & Explanations
+  isDemoMode: boolean;
+  enterDemoMode: () => void;
+  exitDemoMode: () => void;
+  demoNoticeModal: DemoNoticeState | null;
+  showDemoNotice: (
+    title: string,
+    message: string,
+    actionName?: string,
+    category?: DemoNoticeState['category']
+  ) => void;
+  closeDemoNoticeModal: () => void;
 
   // Real Firebase Authentication State & Actions
   user: User | null;
@@ -145,15 +163,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [aiPanelOpen, setAiPanelOpen] = useState<boolean>(false);
   const [viewState, setViewState] = useState<ViewState>('normal');
 
+  // Demo Mode State Initialization
+  const checkInitialDemo = (): boolean => {
+    if (typeof window === 'undefined') return false;
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === 'true') return true;
+    try {
+      return localStorage.getItem('careeros_demo_mode') === 'true';
+    } catch {
+      return false;
+    }
+  };
+
+  const initialDemo = checkInitialDemo();
+  const [isDemoMode, setIsDemoMode] = useState<boolean>(initialDemo);
+  const [demoNoticeModal, setDemoNoticeModal] = useState<DemoNoticeState | null>(null);
+
   // Firebase Auth State
   const [user, setUser] = useState<User | null>(authService.getCurrentUser());
   const [authStatus, setAuthStatus] = useState<AuthStatus>(authService.getAuthStatus());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(false);
 
-  // Real-time Firestore Profile & Resume State
-  const [profile, setProfile] = useState<UserProfile>(EMPTY_PROFILE);
-  const [resumeVersions, setResumeVersions] = useState<ResumeVersion[]>([]);
-  const [selectedVersionId, setSelectedVersionId] = useState<string>('');
+  // Profile & Resume State (Pre-populated with rich fictional dataset if Demo Mode)
+  const [profile, setProfile] = useState<UserProfile>(initialDemo ? mockProfile : EMPTY_PROFILE);
+  const [resumeVersions, setResumeVersions] = useState<ResumeVersion[]>(initialDemo ? mockResumeVersions : []);
+  const [selectedVersionId, setSelectedVersionId] = useState<string>(
+    initialDemo && mockResumeVersions.length > 0 ? mockResumeVersions[0].id : ''
+  );
 
   // Resume Upload & Review State
   const [isUploading, setIsUploading] = useState<boolean>(false);
@@ -164,11 +200,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [reviewedParsedData, setReviewedParsedData] = useState<ParsedResumeData | null>(null);
   const [reviewedVersion, setReviewedVersion] = useState<ResumeVersion | null>(null);
 
-  // Application & Job Pipeline Data (Genuine empty state for authenticated users)
+  // Application & Job Pipeline Data
   const [jobs, setJobs] = useState<NormalizedJob[]>(mockJobs);
-  const [applications, setApplications] = useState<ApplicationItem[]>([]);
+  const [applications, setApplications] = useState<ApplicationItem[]>(initialDemo ? mockApplications : []);
   const [preferences, setPreferences] = useState<JobPreferences>(mockPreferences);
-  const [learningTasks, setLearningTasks] = useState<LearningTask[]>([]);
+  const [learningTasks, setLearningTasks] = useState<LearningTask[]>(initialDemo ? mockSevenDayPlan : []);
 
   const [selectedJobForDetails, setSelectedJobForDetails] = useState<NormalizedJob | null>(null);
   const [selectedJobForApply, setSelectedJobForApply] = useState<NormalizedJob | null>(null);
@@ -189,6 +225,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
 
       if (firebaseUser) {
+        // Authenticated user detected: Disable demo mode and load real user assets
+        setIsDemoMode(false);
+        try {
+          localStorage.removeItem('careeros_demo_mode');
+        } catch {}
+
         // 1. Real-time Firestore Profile Listener
         unsubscribeProfileListener = subscribeToUserProfile(
           firebaseUser.id,
@@ -227,12 +269,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           setSelectedVersionId('');
         }
       } else {
-        // Unauthenticated: Clear user data
-        setProfile(EMPTY_PROFILE);
-        setResumeVersions([]);
-        setSelectedVersionId('');
-        setApplications([]);
-        setLearningTasks([]);
+        // Unauthenticated: Clear user data only if NOT in Demo Mode
+        if (!isDemoMode && !checkInitialDemo()) {
+          setProfile(EMPTY_PROFILE);
+          setResumeVersions([]);
+          setSelectedVersionId('');
+          setApplications([]);
+          setLearningTasks([]);
+        }
       }
     });
 
@@ -242,32 +286,100 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         unsubscribeProfileListener();
       }
     };
-  }, []);
+  }, [isDemoMode]);
 
-  // Real-time Profile Updating in Firestore
+  // Demo Mode Handlers
+  const enterDemoMode = () => {
+    setIsDemoMode(true);
+    try {
+      localStorage.setItem('careeros_demo_mode', 'true');
+    } catch {}
+    setProfile(mockProfile);
+    setResumeVersions(mockResumeVersions);
+    if (mockResumeVersions.length > 0) {
+      setSelectedVersionId(mockResumeVersions[0].id);
+    }
+    setApplications(mockApplications);
+    setLearningTasks(mockSevenDayPlan);
+    setJobs(mockJobs);
+    setPreferences(mockPreferences);
+    setActiveTab('dashboard');
+    setIsAuthModalOpen(false);
+    addToast({
+      type: 'info',
+      title: '✨ Demo Mode Activated',
+      message: 'Exploring CareerOS with sample candidate Alex Rivera (Lead Gen AI Engineer). Fictional data loaded.',
+    });
+  };
+
+  const exitDemoMode = () => {
+    setIsDemoMode(false);
+    try {
+      localStorage.removeItem('careeros_demo_mode');
+    } catch {}
+    if (!user) {
+      setProfile(EMPTY_PROFILE);
+      setResumeVersions([]);
+      setSelectedVersionId('');
+      setApplications([]);
+      setLearningTasks([]);
+    }
+    setActiveTab('dashboard');
+    addToast({
+      type: 'info',
+      title: 'Exited Demo Mode',
+      message: 'Sign in to access your personal CareerOS workspace.',
+    });
+  };
+
+  const showDemoNotice = (
+    title: string,
+    message: string,
+    actionName?: string,
+    category?: DemoNoticeState['category']
+  ) => {
+    setDemoNoticeModal({
+      isOpen: true,
+      title,
+      message,
+      actionName,
+      category: category || 'general',
+    });
+  };
+
+  const closeDemoNoticeModal = () => {
+    setDemoNoticeModal(null);
+  };
+
+  // Real-time Profile Updating in Firestore (or local state in Demo Mode)
   const updateProfile = async (updated: Partial<UserProfile>): Promise<void> => {
     // Update local state immediately for instant responsive UI
     setProfile((prev) => ({ ...prev, ...updated }));
 
-    if (user) {
-      try {
-        await saveUserProfileToFirestore(user.id, updated);
-      } catch (err: any) {
-        console.error('Error persisting profile to Firestore:', err);
-        addToast({
-          type: 'error',
-          title: 'Sync Warning',
-          message: 'Unable to write profile updates to Firestore. Check connection or security rules.',
-        });
-        return;
-      }
+    if (isDemoMode || !user) {
+      addToast({
+        type: 'info',
+        title: 'Demo Profile Updated',
+        message: 'Changes updated for this demo session. Sign in with Google to save permanently.',
+      });
+      return;
     }
 
-    addToast({
-      type: 'success',
-      title: 'Profile Updated',
-      message: 'Your Career Digital Twin has been saved to Firestore.',
-    });
+    try {
+      await saveUserProfileToFirestore(user.id, updated);
+      addToast({
+        type: 'success',
+        title: 'Profile Updated',
+        message: 'Your Career Digital Twin has been saved to Firestore.',
+      });
+    } catch (err: any) {
+      console.error('Error persisting profile to Firestore:', err);
+      addToast({
+        type: 'error',
+        title: 'Sync Warning',
+        message: 'Unable to write profile updates to Firestore. Check connection or security rules.',
+      });
+    }
   };
 
   const addToast = (toast: Omit<Toast, 'id'>) => {
@@ -358,16 +470,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
     setApplications((prev) => [newApp, ...prev]);
 
-    addToast({
-      type: 'info',
-      title:
-        operatingMode === 'auto'
-          ? 'Auto Apply Queued'
-          : operatingMode === 'approval'
-          ? 'Review & Apply Prepared'
-          : 'Preparation Saved',
-      message: `Application package registered for ${targetJob.title} at ${targetJob.company}.`,
-    });
+    if (isDemoMode) {
+      showDemoNotice(
+        'Simulated Application Recorded',
+        `Your application package for ${targetJob.title} at ${targetJob.company} has been queued on your sample pipeline board. In production, this package is reviewed and dispatched to the employer.`,
+        'Submit Application',
+        'apply'
+      );
+    } else {
+      addToast({
+        type: 'info',
+        title:
+          operatingMode === 'auto'
+            ? 'Auto Apply Queued'
+            : operatingMode === 'approval'
+            ? 'Review & Apply Prepared'
+            : 'Preparation Saved',
+        message: `Application package registered for ${targetJob.title} at ${targetJob.company}.`,
+      });
+    }
   };
 
   const updatePreferences = (updated: Partial<JobPreferences>) => {
@@ -453,7 +574,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       };
 
       // Persist resume metadata to Firestore
-      if (user) {
+      if (user && !isDemoMode) {
         await saveResumeVersionMetadata(user.id, newVersion);
       }
 
@@ -493,7 +614,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
     setResumeVersions(updated);
 
-    if (user) {
+    if (user && !isDemoMode) {
       const selected = updated.find((v) => v.id === versionId);
       if (selected) {
         await saveResumeVersionMetadata(user.id, selected);
@@ -508,6 +629,25 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const deleteResumeVersion = async (versionId: string): Promise<void> => {
+    if (isDemoMode) {
+      const updated = resumeVersions.filter((v) => v.id !== versionId);
+      if (updated.length > 0 && !updated.some((v) => v.isPrimary)) {
+        updated[0].isPrimary = true;
+      }
+      setResumeVersions(updated);
+
+      if (selectedVersionId === versionId) {
+        setSelectedVersionId(updated.length > 0 ? updated[0].id : '');
+      }
+
+      addToast({
+        type: 'info',
+        title: 'Demo Resume Removed',
+        message: 'Resume removed from active demo view.',
+      });
+      return;
+    }
+
     const currentUserId = user?.id || 'guest_user';
     await resumeStorageService.deleteResumeFile(currentUserId, versionId);
 
@@ -533,10 +673,55 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const downloadResumeFile = async (versionId: string): Promise<void> => {
-    const currentUserId = user?.id || 'guest_user';
     const version = resumeVersions.find((v) => v.id === versionId);
     if (!version) return;
 
+    if (isDemoMode && !version.storageKey) {
+      const demoText = `=====================================================
+CAREEROS AI RESUME ASSET (DEMO EXPORT)
+=====================================================
+Candidate: ${profile.name}
+Role Target: ${version.targetFocus || profile.targetRole}
+ATS Score: ${version.atsScore}%
+Version: ${version.version} (${version.name})
+
+SUMMARY:
+${profile.summary}
+
+VERIFIED SKILLS:
+${(profile.skills || []).map((s) => `• ${s.name} (${s.level})`).join('\n')}
+
+EXPERIENCE HIGHLIGHTS:
+${(profile.experience || [])
+  .map(
+    (e) => `[${e.company}] ${e.role} (${e.startDate} - ${e.endDate})
+${e.description.map((d) => `  - ${d}`).join('\n')}`
+  )
+  .join('\n\n')}
+
+=====================================================
+Exported from CareerOS Demo Mode • Sample Portfolio Candidate
+=====================================================`;
+
+      const blob = new Blob([demoText], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = version.name.replace(/\.(pdf|docx)$/i, '') + '_Demo_Export.txt';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      addToast({
+        type: 'success',
+        title: 'Demo Resume Exported',
+        message: `Sample resume asset exported: ${version.name}.`,
+      });
+      return;
+    }
+
+    const currentUserId = user?.id || 'guest_user';
     try {
       await resumeStorageService.downloadResumeFile(currentUserId, versionId, version.name);
       addToast({
@@ -599,18 +784,20 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
   };
 
-  // Convert profile skills to category items or empty array
-  const dynamicSkills: SkillCategoryItem[] = (profile.skills || []).map((s) => ({
-    name: s.name,
-    category: (s.category as any) || 'Languages & Tools',
-    currentLevel: (s.level as any) || 'Intermediate',
-    targetLevel: 'Advanced',
-    status: 'Intermediate',
-    marketDemand: 88,
-    what: `${s.name} core competency.`,
-    why: `Demonstrated in verified profile skills.`,
-    whatNext: `Continue practicing advanced patterns.`,
-  }));
+  // Dynamic skills: In demo mode, provide rich skill coach prioritized data
+  const dynamicSkills: SkillCategoryItem[] = isDemoMode
+    ? mockSkills
+    : (profile.skills || []).map((s) => ({
+        name: s.name,
+        category: (s.category as any) || 'Languages & Tools',
+        currentLevel: (s.level as any) || 'Intermediate',
+        targetLevel: 'Advanced',
+        status: (s.level === 'Expert' || s.level === 'Advanced' ? 'Strong' : s.level === 'Intermediate' ? 'Intermediate' : 'Needs Improvement') as any,
+        marketDemand: 88,
+        what: `${s.name} core competency.`,
+        why: `Demonstrated in verified profile skills.`,
+        whatNext: `Continue practicing advanced patterns.`,
+      }));
 
   const activeResumeVersion =
     resumeVersions.find((v) => v.id === selectedVersionId) ||
@@ -628,9 +815,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     viewState,
     setViewState,
 
+    // Demo Mode State & Controls
+    isDemoMode,
+    enterDemoMode,
+    exitDemoMode,
+    demoNoticeModal,
+    showDemoNotice,
+    closeDemoNoticeModal,
+
     user,
     authStatus,
-    isAuthenticated: authStatus === 'authenticated' && !!user,
+    isAuthenticated: authStatus === 'authenticated' && !!user && !isDemoMode,
     loginWithGoogle,
     sendPhoneOTP,
     verifyPhoneOTP,

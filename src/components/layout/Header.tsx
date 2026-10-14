@@ -12,6 +12,7 @@ import {
   LogOut,
   ChevronDown,
   UserCheck,
+  Home,
 } from 'lucide-react';
 import { OperatingMode, ViewState } from '../../types';
 
@@ -25,11 +26,14 @@ export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
     setOperatingMode,
     toggleAiPanel,
     profile,
+    activeTab,
     setActiveTab,
     viewState,
     setViewState,
     user,
     isAuthenticated,
+    isDemoMode,
+    exitDemoMode,
     logout,
     openAuthModal,
   } = useApp();
@@ -46,6 +50,14 @@ export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Debug state controls: accessible ONLY in dev environment when explicit debug flag is set and not in demo mode
+  const isDebugEnvironment =
+    Boolean(import.meta.env.DEV) &&
+    !isDemoMode &&
+    typeof window !== 'undefined' &&
+    (new URLSearchParams(window.location.search).has('debug') ||
+      localStorage.getItem('careeros_debug') === 'true');
 
   return (
     <header className="app-header">
@@ -86,8 +98,8 @@ export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
           </button>
         </div>
 
-        {/* Workspace Mode Indicator */}
-        {isAuthenticated ? (
+        {/* Authenticated Workspace Indicator */}
+        {isAuthenticated && (
           <div
             style={{
               display: 'flex',
@@ -106,44 +118,27 @@ export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
             <UserCheck size={13} />
             <span>Authenticated Workspace</span>
           </div>
-        ) : (
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '0.4rem',
-              background: 'rgba(245, 158, 11, 0.1)',
-              border: '1px solid rgba(245, 158, 11, 0.3)',
-              color: '#b45309',
-              padding: '0.28rem 0.7rem',
-              borderRadius: 'var(--radius-full)',
-              fontSize: '0.74rem',
-              fontWeight: 600,
-            }}
-            title="Demo Candidate Profile (Alex Rivera). Click account to sign in or register."
-          >
-            <FlaskConical size={13} />
-            <span>Demo Candidate Mode</span>
-          </div>
         )}
       </div>
 
       <div className="header-right">
-        {/* Verification ViewState Switcher (For testing UI states) */}
-        <div className="state-switcher" title="Simulate View States for UX verification">
-          <span className="state-switcher-label">
-            <Layers size={11} style={{ display: 'inline', marginRight: '3px' }} /> State:
-          </span>
-          {(['normal', 'loading', 'empty', 'error'] as ViewState[]).map((state) => (
-            <button
-              key={state}
-              className={`state-btn ${viewState === state ? 'active' : ''}`}
-              onClick={() => setViewState(state)}
-            >
-              {state.charAt(0).toUpperCase() + state.slice(1)}
-            </button>
-          ))}
-        </div>
+        {/* Verification ViewState Switcher (Developer / Debug environment only) */}
+        {isDebugEnvironment && (
+          <div className="state-switcher" title="Simulate View States for UX verification (Debug Environment)">
+            <span className="state-switcher-label">
+              <Layers size={11} style={{ display: 'inline', marginRight: '3px' }} /> State:
+            </span>
+            {(['normal', 'loading', 'empty', 'error'] as ViewState[]).map((state) => (
+              <button
+                key={state}
+                className={`state-btn ${viewState === state ? 'active' : ''}`}
+                onClick={() => setViewState(state)}
+              >
+                {state.charAt(0).toUpperCase() + state.slice(1)}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* AI Assistant Drawer Trigger */}
         <button
@@ -182,7 +177,7 @@ export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
                 position: 'absolute',
                 top: '110%',
                 right: 0,
-                width: '230px',
+                width: '240px',
                 background: '#ffffff',
                 borderRadius: 'var(--radius-md)',
                 boxShadow: 'var(--shadow-lg)',
@@ -201,10 +196,23 @@ export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
                 <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
                   {profile.email || user?.email}
                 </div>
-                <div style={{ fontSize: '0.68rem', color: 'var(--ai-primary)', marginTop: '0.2rem', fontWeight: 600 }}>
-                  {isAuthenticated ? 'Active User Account' : 'Demo Account (Alex Rivera)'}
+                <div style={{ fontSize: '0.68rem', color: isDemoMode ? '#d97706' : 'var(--ai-primary)', marginTop: '0.2rem', fontWeight: 600 }}>
+                  {isAuthenticated ? 'Active User Account' : 'Demo Sandbox (Alex Rivera)'}
                 </div>
               </div>
+
+              {isDemoMode && activeTab !== 'dashboard' && (
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    setActiveTab('dashboard');
+                    setDropdownOpen(false);
+                  }}
+                  style={{ width: '100%', justifyContent: 'flex-start', border: 'none', background: 'transparent' }}
+                >
+                  <Home size={14} /> Back to Demo Home
+                </button>
+              )}
 
               <button
                 className="btn btn-secondary btn-sm"
@@ -214,7 +222,7 @@ export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
                 }}
                 style={{ width: '100%', justifyContent: 'flex-start', border: 'none', background: 'transparent' }}
               >
-                <UserIcon size={14} /> My Profile
+                <UserIcon size={14} /> My Profile Details
               </button>
 
               <button
@@ -226,8 +234,21 @@ export const Header: React.FC<HeaderProps> = ({ onMobileMenuToggle }) => {
                 style={{ width: '100%', justifyContent: 'flex-start', border: 'none', background: 'transparent' }}
               >
                 <Sparkles size={14} color="var(--ai-primary)" />
-                {isAuthenticated ? 'Switch / New Account' : 'Sign In / Register'}
+                {isAuthenticated ? 'Switch / New Account' : 'Sign In / Register Account'}
               </button>
+
+              {isDemoMode && (
+                <button
+                  className="btn btn-secondary btn-sm"
+                  onClick={() => {
+                    exitDemoMode();
+                    setDropdownOpen(false);
+                  }}
+                  style={{ width: '100%', justifyContent: 'flex-start', border: 'none', background: 'transparent', color: 'var(--color-error)' }}
+                >
+                  <LogOut size={14} /> Exit Demo Mode
+                </button>
+              )}
 
               {isAuthenticated && (
                 <button

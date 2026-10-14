@@ -33,6 +33,8 @@ export const ResumePage: React.FC = () => {
     openReviewModal,
     addToast,
     isAuthenticated,
+    isDemoMode,
+    showDemoNotice,
   } = useApp();
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -59,6 +61,14 @@ export const ResumePage: React.FC = () => {
 
     try {
       await uploadAndParseResume(file);
+      if (isDemoMode) {
+        showDemoNotice(
+          'Resume Parsed in Client Sandbox',
+          `Parsed ${file.name} in browser client memory. In production, extracted entities are persisted to your isolated Firestore account.`,
+          'Resume Upload',
+          'resume'
+        );
+      }
     } catch {
       // Error handled in AppContext
     }
@@ -112,9 +122,9 @@ export const ResumePage: React.FC = () => {
         {/* Page Header */}
         <div className="page-header">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem', flexWrap: 'wrap' }}>
               <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--ai-primary)' }}>
-                Resume Intelligence & Storage Engine (Phase 2)
+                {isDemoMode ? 'Resume Intelligence • Pre-Loaded Benchmark Resumes' : 'Resume Intelligence & Storage Engine (Phase 2)'}
               </span>
               {activeVersion ? (
                 <Badge variant={activeVersion.isPrimary ? 'success' : 'neutral'}>
@@ -126,7 +136,15 @@ export const ResumePage: React.FC = () => {
             </div>
             <h1 className="page-title">Resume Intelligence</h1>
             <p className="page-subtitle">
-              Upload PDF or DOCX documents for automated truthful entity extraction, version management, and local secure storage.
+              {isDemoMode ? (
+                <>
+                  Inspecting sample candidate <strong>Alex Rivera</strong>&apos;s tailored ATS resume versions. Client-side parsing and ATS evaluation are active.
+                </>
+              ) : (
+                <>
+                  Upload PDF or DOCX documents for automated truthful entity extraction, version management, and local secure storage.
+                </>
+              )}
             </p>
           </div>
           <div className="page-actions">

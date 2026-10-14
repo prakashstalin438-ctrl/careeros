@@ -304,3 +304,11 @@ export interface AIAgentStatus {
 }
 
 export type ViewState = 'normal' | 'loading' | 'empty' | 'error';
+
+export interface DemoNoticeState {
+  isOpen: boolean;
+  title: string;
+  message: string;
+  actionName?: string;
+  category?: 'apply' | 'resume' | 'profile' | 'ai' | 'settings' | 'general';
+}
