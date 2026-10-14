@@ -1,32 +1,87 @@
-# React + TypeScript + Vite
+# CareerOS — AI-Powered Career Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+CareerOS is a web application designed to help users explore career opportunities and manage their career journey through a modern, easy-to-use dashboard.
 
-Currently, two official plugins are available:
+🔗 **Live Demo:** https://careeros-pi-two.vercel.app/  
+💻 **GitHub Repository:** https://github.com/prakashstalin438-ctrl/careeros
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## ✨ Features
 
-## React Compiler
+- **Demo Mode:** Explore the dashboard using sample data without signing in.
+- **Google Authentication:** Sign in using Google.
+- **Career Dashboard:** Access the application's available career-related features in one place.
+- **Responsive Interface:** A modern React-based user interface.
+- **Firebase Integration:** Uses Firebase services for the configured application features.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+*Note: Features may depend on the current application implementation and configuration.*
 
-## Expanding the Oxlint configuration
+## 🛠️ Tech Stack
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+- React
+- TypeScript
+- Vite
+- Firebase
+- CSS and the UI libraries used in the project
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+## 🚀 Getting Started
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+### Prerequisites
+
+- Node.js and npm
+- A Firebase project for authentication and other configured Firebase services
+
+### Installation
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/prakashstalin438-ctrl/careeros.git
+   ```
+
+2. Open the project directory:
+
+   ```bash
+   cd careeros
+   ```
+
+3. Install dependencies:
+
+   ```bash
+   npm install
+   ```
+
+4. Configure the environment variables required by the application in a local `.env` file, following the variable names used in the project's Firebase configuration.
+
+5. Start the development server:
+
+   ```bash
+   npm run dev
+   ```
+
+6. Open the local URL displayed in the terminal.
+
+## 🔐 Environment Configuration
+
+Configure the Firebase environment variables required by the application before using authentication or other Firebase-powered features.
+
+- Never commit `.env` files, private keys, or access tokens.
+- Keep `.env` in `.gitignore`.
+- Use your own Firebase project configuration when setting up a separate instance.
+
+## 📸 Screenshots
+
+Add screenshots of the login page, demo dashboard, and main application pages here.
+
+## 🔮 Future Improvements
+
+- Expand career-planning and tracking features.
+- Improve dashboard personalization.
+- Add further career insights and progress visualizations.
+
+## 👨‍💻 Developer
+
+Built as a portfolio project to demonstrate modern web application development with React, TypeScript, and Firebase.
+
+## 📄 License
+
+Add a license if you intend to distribute the project under an open-source license.
